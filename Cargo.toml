@@ -1,0 +1,17 @@
+[package]
+name = "istr"
+version = "0.1.0"
+authors = ["ct-austin <c@ctaustin.me>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "0.15"
+regex = "1.1.5"
+lazy_static = "1.3.0"
+
+[[test]]
+name = "tests"
+path = "tests/tests.rs"
