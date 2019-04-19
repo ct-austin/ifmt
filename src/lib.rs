@@ -1,10 +1,12 @@
 extern crate proc_macro;
+extern crate proc_macro2;
 extern crate regex;
 #[macro_use]
 extern crate lazy_static;
-use proc_macro::TokenStream;
+#[macro_use]
+extern crate quote;
+use proc_macro2::TokenStream;
 use regex::Regex;
-use syn::parse;
 
 fn consume_expr(s: &str) -> (&str, String) {
     lazy_static! {
@@ -21,7 +23,7 @@ fn consume_expr(s: &str) -> (&str, String) {
     let mut s = s;
     let mut expr = String::new();
     let mut brace_count = 1;
-    while s.len() > 0 {
+    while !s.is_empty() {
         let c = s.chars().next().unwrap();
         // TODO:
         // match here doubles the indentation
@@ -70,8 +72,8 @@ fn consume_expr(s: &str) -> (&str, String) {
                             Regex::new(&format!(r##"^[\s\S]+?"#{{{}}}"##, hash_count)).unwrap();
                         let em = end_r.find(s).expect("unclosed internal raw string");
 
-                        s = &s[em.end()..];
                         expr.push_str(em.as_str());
+                        s = &s[em.end()..];
                     }
                     None => {
                         expr.push(c);
@@ -85,24 +87,26 @@ fn consume_expr(s: &str) -> (&str, String) {
     panic!("unbalanced {");
 }
 
-#[proc_macro]
-pub fn formati(s_tokens: TokenStream) -> TokenStream {
+fn extract_exprs(s_tokens: TokenStream) -> (String, TokenStream) {
     lazy_static! {
         static ref SPEC: Regex =
             Regex::new(r":([\s\S]?[<^>])?([\+\-])?(#)?(0)?(\d+|\*)?(\.\d+)?(\?|\w+)?$").unwrap();
     }
 
-    let s_tree: syn::Lit = parse(s_tokens).unwrap();
+    if s_tokens.is_empty() {
+        return (String::new(), TokenStream::new());
+    }
+    let s_tree: syn::Lit = syn::parse2(s_tokens).expect("expected string literal");
 
     let s = match s_tree {
         syn::Lit::Str(ls) => ls.value(),
-        _ => panic!("f! string applied to non-string token"),
+        _ => panic!("string applied to non-string token"),
     };
 
     let mut format_lit = String::from("");
-    let mut exprs = Vec::new();
+    let mut exprs = TokenStream::new();
     let mut s: &str = &s;
-    while s.len() > 0 {
+    while !s.is_empty() {
         let c = s.chars().next().unwrap();
 
         match c {
@@ -111,7 +115,7 @@ pub fn formati(s_tokens: TokenStream) -> TokenStream {
                 match s.chars().next() {
                     Some('{') => format_lit.push_str("{{"),
                     _ => {
-                        let (new_s, expr) = consume_expr(s);
+                        let (new_s, mut expr) = consume_expr(s);
                         s = new_s;
                         let spec_match = SPEC.find(&expr);
                         match spec_match {
@@ -119,13 +123,29 @@ pub fn formati(s_tokens: TokenStream) -> TokenStream {
                                 format_lit.push('{');
                                 format_lit.push_str(m.as_str());
                                 format_lit.push('}');
-                                exprs.push(format!("({})", &expr[..m.start()]));
+                                let si = m.start();
+
+                                expr.truncate(si);
                             }
                             None => {
                                 format_lit.push_str("{}");
-                                exprs.push(expr);
                             }
                         }
+                        
+                        // TODO: errors 'expecting <X> got }' don't show correctly
+                        // the span is pointing at the last value in the macro invocation and not the whole thing (which is already wrong but not quite as wrong)
+                        let tt = match expr.parse::<proc_macro2::TokenStream>() {
+                            Ok(x) => proc_macro2::TokenTree::Group(proc_macro2::Group::new(proc_macro2::Delimiter::Brace, x)),
+                            Err(e) => {
+                                let msg = format!("{:?}", e);
+                                return (String::new(), quote! {
+                                    compile_error!(#msg);
+                                })
+                            }
+                        };
+
+                        exprs.extend(std::iter::once(tt));
+                        exprs.extend(std::iter::once(proc_macro2::TokenTree::Punct(proc_macro2::Punct::new(',', proc_macro2::Spacing::Alone))));
                     }
                 }
             }
@@ -141,11 +161,65 @@ pub fn formati(s_tokens: TokenStream) -> TokenStream {
         }
         s = &s[c.len_utf8()..];
     }
-    format!(
-        "::std::format!({}, {})",
-        proc_macro::Literal::string(&format_lit).to_string(),
-        exprs.join(",")
-    )
-    .parse()
-    .unwrap()
+
+    (format_lit, exprs)
+}
+
+macro_rules! def_istr_macro {
+    ($name:ident, $to_wrap:ident) => {
+        #[proc_macro]
+        pub fn $name (tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+            let (s, e) = extract_exprs(tokens.into());
+            let expanded = quote! {
+                ::std::$to_wrap!(#s, #e)
+            };
+
+            expanded.into()
+        }
+    };
+}
+
+def_istr_macro!(iformat, format);
+def_istr_macro!(iprint, print);
+def_istr_macro!(iprintln, println);
+def_istr_macro!(ieprint, eprint);
+def_istr_macro!(ieprintln, eprintln);
+def_istr_macro!(iformat_args, format_args);
+
+#[proc_macro]
+pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    use std::iter::FromIterator;
+    let mut tokens = tokens.into_iter();
+    // go until we hit a ,
+    // probably should be done with macro_rules but oh well
+    let writer = proc_macro2::TokenStream::from(
+        proc_macro::TokenStream::from_iter(
+            tokens.by_ref().take_while(|x| match x { proc_macro::TokenTree::Punct(c) => c.as_char() != ',', _ => true })));
+    let n = match tokens.next() {
+        Some(x) => x,
+        None => return (quote! { ::std::writeln!(#writer); }).into()
+    };
+    let (s, e) = extract_exprs(proc_macro::TokenStream::from(n).into());
+    let expanded = quote! {
+        ::std::write!(#writer, #s, #e)
+    };
+    expanded.into()
+}
+
+#[proc_macro]
+pub fn iwriteln(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    use std::iter::FromIterator;
+    let mut tokens = tokens.into_iter();
+    let writer = proc_macro2::TokenStream::from(
+        proc_macro::TokenStream::from_iter(
+            tokens.by_ref().take_while(|x| match x { proc_macro::TokenTree::Punct(c) => c.as_char() != ',', _ => true })));
+    let n = match tokens.next() {
+        Some(x) => x,
+        None => return (quote! { ::std::writeln!(#writer) }).into()
+    };
+    let (s, e) = extract_exprs(proc_macro::TokenStream::from(n).into());
+    let expanded = quote! {
+        ::std::writeln!(#writer, #s, #e)
+    };
+    expanded.into()
 }
