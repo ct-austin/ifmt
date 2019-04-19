@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod tests {
-    use istr::{iformat, iwrite, iwriteln};
+    use ifmt::{iformat, iwrite, iwriteln};
     #[test]
     fn simple_subst() {
         let x = 5.3;

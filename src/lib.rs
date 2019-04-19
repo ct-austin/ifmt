@@ -165,7 +165,7 @@ fn extract_exprs(s_tokens: TokenStream) -> (String, TokenStream) {
     (format_lit, exprs)
 }
 
-macro_rules! def_istr_macro {
+macro_rules! def_ifmt_macro {
     ($name:ident, $to_wrap:ident) => {
         #[proc_macro]
         pub fn $name (tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -179,12 +179,12 @@ macro_rules! def_istr_macro {
     };
 }
 
-def_istr_macro!(iformat, format);
-def_istr_macro!(iprint, print);
-def_istr_macro!(iprintln, println);
-def_istr_macro!(ieprint, eprint);
-def_istr_macro!(ieprintln, eprintln);
-def_istr_macro!(iformat_args, format_args);
+def_ifmt_macro!(iformat, format);
+def_ifmt_macro!(iprint, print);
+def_ifmt_macro!(iprintln, println);
+def_ifmt_macro!(ieprint, eprint);
+def_ifmt_macro!(ieprintln, eprintln);
+def_ifmt_macro!(iformat_args, format_args);
 
 #[proc_macro]
 pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
