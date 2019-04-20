@@ -1,3 +1,31 @@
+/*! A small crate which brings inline string interpolation to rust's standard formatting macros.
+
+# Examples
+```rust
+#![feature(proc_macro_hygiene)]
+use ifmt::iprintln;
+let four = 4;
+iprintln!("four plus four is: {four + 4}");
+// four plus four is: 8
+iprintln!("here's a hex number: 0x{0xb0bi64 * 1321517i64 :x}");
+// here's a hex number: 0xdeadbeef
+iprintln!("here's a debugging value: {Some(four):?}");
+// here's a debugging value: Some(4)
+```
+
+# Supported macros
+```ignore
+format!      -> iformat!
+print!       -> iprint!
+println!     -> iprintln!
+eprint!      -> ieprint!
+eprintln!    -> ieprintln!
+write!       -> iwrite!
+writeln!     -> iwriteln!
+format_args! -> iformat_args!
+```
+*/
+
 extern crate proc_macro;
 extern crate proc_macro2;
 extern crate regex;
@@ -23,8 +51,7 @@ fn consume_expr(s: &str) -> (&str, String) {
     let mut s = s;
     let mut expr = String::new();
     let mut brace_count = 1;
-    while !s.is_empty() {
-        let c = s.chars().next().unwrap();
+    while let Some(c) = s.chars().next() {
         // TODO:
         // match here doubles the indentation
         // either way this might be nested a bit deep
@@ -98,17 +125,15 @@ fn extract_exprs(s_tokens: TokenStream) -> (String, TokenStream) {
     }
     let s_tree: syn::Lit = syn::parse2(s_tokens).expect("expected string literal");
 
-    let s = match s_tree {
+    let format_str = match s_tree {
         syn::Lit::Str(ls) => ls.value(),
-        _ => panic!("string applied to non-string token"),
+        _ => panic!("expected string literal"),
     };
 
     let mut format_lit = String::from("");
     let mut exprs = TokenStream::new();
-    let mut s: &str = &s;
-    while !s.is_empty() {
-        let c = s.chars().next().unwrap();
-
+    let mut s: &str = &format_str;
+    while let Some(c) = s.chars().next() {
         match c {
             '{' => {
                 s = &s[1..];
@@ -134,7 +159,7 @@ fn extract_exprs(s_tokens: TokenStream) -> (String, TokenStream) {
                         
                         // TODO: errors 'expecting <X> got }' don't show correctly
                         // the span is pointing at the last value in the macro invocation and not the whole thing (which is already wrong but not quite as wrong)
-                        let tt = match expr.parse::<proc_macro2::TokenStream>() {
+                        let tt = match expr.parse() {
                             Ok(x) => proc_macro2::TokenTree::Group(proc_macro2::Group::new(proc_macro2::Delimiter::Brace, x)),
                             Err(e) => {
                                 let msg = format!("{:?}", e);
@@ -166,8 +191,9 @@ fn extract_exprs(s_tokens: TokenStream) -> (String, TokenStream) {
 }
 
 macro_rules! def_ifmt_macro {
-    ($name:ident, $to_wrap:ident) => {
+    ($docstring:tt, $name:ident, $to_wrap:ident) => {
         #[proc_macro]
+        #[doc = $docstring]
         pub fn $name (tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
             let (s, e) = extract_exprs(tokens.into());
             let expanded = quote! {
@@ -179,13 +205,29 @@ macro_rules! def_ifmt_macro {
     };
 }
 
-def_ifmt_macro!(iformat, format);
-def_ifmt_macro!(iprint, print);
-def_ifmt_macro!(iprintln, println);
-def_ifmt_macro!(ieprint, eprint);
-def_ifmt_macro!(ieprintln, eprintln);
-def_ifmt_macro!(iformat_args, format_args);
+def_ifmt_macro!(
+r#"Creates a String by interpolating inlined expressions.
+Takes one argument, which must be a string literal.
 
+Works by expanding to `format!`:
+
+`iformat!("two plus two: {2 + 2}") -> format!("two plus two: {}", {2 + 2})`
+
+`iformat!("foo: {foo:?}") -> format!("foo: {:?}", {foo})`"#,
+iformat,
+format);
+
+def_ifmt_macro!("Print an [`iformat!`][iformat]-ed string to standard out.", iprint, print);
+
+def_ifmt_macro!("Print an [`iformat!`][iformat]-ed string to standard out, followed by `\\n`.", iprintln, println);
+
+def_ifmt_macro!("Print an [`iformat!`][iformat]-ed string to standard error.", ieprint, eprint);
+
+def_ifmt_macro!("Print an [`iformat!`][iformat]-ed string to standard error, followed by `\\n`.", ieprintln, eprintln);
+
+def_ifmt_macro!("Create a `fmt::Arguments` value a la format_args! with inlined expressions (using the same syntax as `iformat!`).", iformat_args, format_args);
+
+/// Print an [`iformat!`][iformat]-ed string to the given buffer.
 #[proc_macro]
 pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use std::iter::FromIterator;
@@ -197,7 +239,7 @@ pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
             tokens.by_ref().take_while(|x| match x { proc_macro::TokenTree::Punct(c) => c.as_char() != ',', _ => true })));
     let n = match tokens.next() {
         Some(x) => x,
-        None => return (quote! { ::std::writeln!(#writer); }).into()
+        None => return (quote! { ::std::write!(#writer); }).into()
     };
     let (s, e) = extract_exprs(proc_macro::TokenStream::from(n).into());
     let expanded = quote! {
@@ -206,6 +248,7 @@ pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     expanded.into()
 }
 
+/// Print an [`iformat!`][iformat]-ed string to the given buffer, followed by `\n`.
 #[proc_macro]
 pub fn iwriteln(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use std::iter::FromIterator;
