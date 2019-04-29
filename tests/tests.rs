@@ -72,4 +72,24 @@ mod tests {
         assert_eq!(&buffer[..], "\na boring string\nsome math 0xb\nthe 1st end".as_bytes());
     }
 
+    #[test]
+    fn internal_lifetimes() {
+        let test = "a test";
+        assert_eq!("dirty a test",
+            iformat!("dirty { let x: &'static str = test; { let y: &'static str = x; y } }"));
+        assert_eq!("dirty static str = test; { let y: &",
+            iformat!(r#"dirty { let x = "static str = test; { let y: &"; x }"#));
+    }
+
+    #[test]
+    fn internal_chars() {
+        assert_eq!("an open brace: {",
+            iformat!("an open brace: {'{'}"));
+        assert_eq!("a close brace: }",
+            iformat!("a close brace: {'}'}"));
+        assert_eq!("an open brace: {",
+            iformat!(r#"an open brace: {'\u{007b}'}"#));
+        assert_eq!("a close brace: }",
+            iformat!(r#"a close brace: {'\u{007D}'}"#));
+    }
 }

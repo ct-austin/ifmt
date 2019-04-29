@@ -41,8 +41,8 @@ fn consume_expr(s: &str) -> (&str, String) {
         // bad hack regex to look for string/character literals
         // we don't want to count braces contained within them
         static ref LITERAL: Regex = Regex::new(
-            concat!(r#"^('(?:\\[\s\S]|[^\\])+?'"#,
-                    r##"|"(?:\\[\s\S]|[^\\])+?)""##)).unwrap();
+            concat!(r#"^('(?:\\[\s\S]+?|\\'|[^\\'])'"#,
+                    r##"|"(?:\\[\s\S]|[^\\])+?")"##)).unwrap();
         // have to handle raw strings separately due to no backrefs
         static ref RAW_STRING_START: Regex = Regex::new(
             r##"^r(#*)""##).unwrap();
