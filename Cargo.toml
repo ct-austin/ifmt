@@ -1,6 +1,6 @@
 [package]
 name = "ifmt"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["ct-austin <c@ctaustin.me>"]
 edition = "2018"
 readme = "README.md"

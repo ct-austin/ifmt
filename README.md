@@ -5,7 +5,7 @@ A small crate which brings inline string interpolation to rust's standard format
 To use ifmt in your project, add
 ```
 [dependencies]
-ifmt = "0.1.0"
+ifmt = "0.1.1"
 ```
 to your Cargo.toml.
 
@@ -22,7 +22,6 @@ iprintln!("here's a hex number: 0x{0xb0bi64 * 1321517i64 :x}");
 // here's a hex number: 0xdeadbeef
 iprintln!("here's a debugging value: {Some(four):?}");
 // here's a debugging value: Some(4)
-
 ```
 
 ## Supported macros
@@ -35,7 +34,6 @@ eprintln!    -> ieprintln!
 write!       -> iwrite!
 writeln!     -> iwriteln!
 format_args! -> iformat_args!
-
 ```
 
 ## License

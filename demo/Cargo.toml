@@ -5,4 +5,4 @@ authors = ["ct-austin <c@ctaustin.me>"]
 edition = "2018"
 
 [dependencies]
-ifmt = { version = "0.1.0", path = "../" }
+ifmt = { version = "0.1.1", path = "../" }

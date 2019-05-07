@@ -91,5 +91,17 @@ mod tests {
             iformat!(r#"an open brace: {'\u{007b}'}"#));
         assert_eq!("a close brace: }",
             iformat!(r#"a close brace: {'\u{007D}'}"#));
+        assert_eq!("dirty dan: '",
+            iformat!(r#"dirty dan: {'\''; { '\'' }}"#));
+        assert_eq!("pinhead: \"",
+            iformat!(r#"pinhead: {'\"'; { '\"' }}"#));
+        assert_eq!("gary: '",
+            iformat!(r#"gary: {"\'"; { "\'" }}"#));
+        assert_eq!("val kilmer: \"",
+            iformat!(r#"val kilmer: {"\""; { "\"" }}"#));
+        assert_eq!("lelouch: \"",
+            iformat!(r#"lelouch: {'"'; { '"' }}"#));
+        assert_eq!("gon: '",
+            iformat!(r#"gon: {"'"; { "'" }}"#));
     }
 }
