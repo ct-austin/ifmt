@@ -164,9 +164,8 @@ fn extract_exprs(s_tokens: TokenStream) -> (String, TokenStream) {
 }
 
 macro_rules! def_ifmt_macro {
-    ($docstring:tt, $name:ident, $to_wrap:ident) => {
+    ($name:ident, $to_wrap:ident) => {
         #[proc_macro_hack]
-        #[doc = $docstring]
         pub fn $name (tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
             let (s, e) = extract_exprs(tokens.into());
             let expanded = quote! {
@@ -178,29 +177,18 @@ macro_rules! def_ifmt_macro {
     };
 }
 
-def_ifmt_macro!(
-r#"Creates a String by interpolating inlined expressions.
-Takes one argument, which must be a string literal.
+def_ifmt_macro!(iformat, format);
 
-Works by expanding to `format!`:
+def_ifmt_macro!(iprint, print);
 
-`iformat!("two plus two: {2 + 2}") -> format!("two plus two: {}", {2 + 2})`
+def_ifmt_macro!(iprintln, println);
 
-`iformat!("foo: {foo:?}") -> format!("foo: {:?}", {foo})`"#,
-iformat,
-format);
+def_ifmt_macro!(ieprint, eprint);
 
-def_ifmt_macro!("Print an [`iformat!`][iformat]-ed string to standard out.", iprint, print);
+def_ifmt_macro!(ieprintln, eprintln);
 
-def_ifmt_macro!("Print an [`iformat!`][iformat]-ed string to standard out, followed by `\\n`.", iprintln, println);
+def_ifmt_macro!(iformat_args, format_args);
 
-def_ifmt_macro!("Print an [`iformat!`][iformat]-ed string to standard error.", ieprint, eprint);
-
-def_ifmt_macro!("Print an [`iformat!`][iformat]-ed string to standard error, followed by `\\n`.", ieprintln, eprintln);
-
-def_ifmt_macro!("Create a `fmt::Arguments` value a la format_args! with inlined expressions (using the same syntax as `iformat!`).", iformat_args, format_args);
-
-/// Print an [`iformat!`][iformat]-ed string to the given buffer.
 #[proc_macro_hack]
 pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use std::iter::FromIterator;
@@ -221,7 +209,6 @@ pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     expanded.into()
 }
 
-/// Print an [`iformat!`][iformat]-ed string to the given buffer, followed by `\n`.
 #[proc_macro_hack]
 pub fn iwriteln(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use std::iter::FromIterator;
