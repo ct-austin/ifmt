@@ -1,5 +1,3 @@
-#![feature(proc_macro_hygiene)]
-
 fn main() {
     use ifmt::iprintln;
     let four = 4;
