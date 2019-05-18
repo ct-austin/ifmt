@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use ifmt::{iformat, iwrite, iwriteln};
+    use ifmt::{iformat, iwrite, iwriteln, ipanic};
     #[test]
     fn simple_subst() {
         let x = 5.3;
@@ -101,5 +101,12 @@ mod tests {
             iformat!(r#"lelouch: {'"'; { '"' }}"#));
         assert_eq!("gon: '",
             iformat!(r#"gon: {"'"; { "'" }}"#));
+    }
+
+    #[test]
+    #[should_panic(expected = "2B || !2b")]
+    fn panic() {
+        let tobe = 0x2B;
+        ipanic!("{tobe:X} || !{tobe:x}");
     }
 }

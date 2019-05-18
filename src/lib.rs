@@ -63,6 +63,11 @@ pub use ifmt_impl::iwrite;
 #[proc_macro_hack(fake_call_site)]
 pub use ifmt_impl::iwriteln;
 
-/// Create a `fmt::Arguments` value a la format_args! with inlined expressions (using the same syntax as [`iformat!`][iformat]).
+/// Create a `fmt::Arguments` value a la `format_args!` with inlined expressions (using the same syntax as [`iformat!`][iformat]).
 #[proc_macro_hack(fake_call_site)]
 pub use ifmt_impl::iformat_args;
+
+/// Panic with an [`iformat!`][iformat]-ed message.
+#[proc_macro_hack(fake_call_site)]
+pub use ifmt_impl::ipanic;
+

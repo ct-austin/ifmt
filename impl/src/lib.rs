@@ -189,6 +189,8 @@ def_ifmt_macro!(ieprintln, eprintln);
 
 def_ifmt_macro!(iformat_args, format_args);
 
+def_ifmt_macro!(ipanic, panic);
+
 #[proc_macro_hack]
 pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use std::iter::FromIterator;
