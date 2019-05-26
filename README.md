@@ -29,6 +29,7 @@ eprint!      -> ieprint!
 eprintln!    -> ieprintln!
 write!       -> iwrite!
 writeln!     -> iwriteln!
+panic!       -> ipanic!
 format_args! -> iformat_args!
 ```
 
