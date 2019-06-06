@@ -5,7 +5,7 @@ A small crate which brings inline string interpolation to rust's standard format
 To use ifmt in your project, add
 ```
 [dependencies]
-ifmt = "0.1.3"
+ifmt = "0.2.0"
 ```
 to your Cargo.toml.
 

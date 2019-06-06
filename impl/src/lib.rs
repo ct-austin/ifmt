@@ -132,7 +132,7 @@ fn extract_exprs(s_tokens: TokenStream) -> (String, TokenStream) {
 
                         // TODO: better handle error reporting
                         // might need to use literal subspans
-                        // currently does not give a position better than 'in this macro'
+                        // currently does not give a position better than 'in this macro invocation'
                         let tt = match expr.parse() {
                             Ok(x) => proc_macro2::TokenTree::Group(proc_macro2::Group::new(
                                 proc_macro2::Delimiter::None,
