@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use ifmt::{iformat, iwrite, iwriteln, ipanic};
+    use ifmt::{iformat, ipanic, iwrite, iwriteln};
     #[test]
     fn simple_subst() {
         let x = 5.3;
@@ -51,11 +51,13 @@ mod tests {
         let x = "s1";
         let y = "s2";
         assert_eq!(
-            format!("str {}", format!("{} {} {} {} {{", 3 + 4, 90*53, x, y)),
-            iformat!(r#"str {format!("{} {} {} {} {{", 3 + 4, 90*53, x, y)}"#));
+            format!("str {}", format!("{} {} {} {} {{", 3 + 4, 90 * 53, x, y)),
+            iformat!(r#"str {format!("{} {} {} {} {{", 3 + 4, 90 * 53, x, y)}"#)
+        );
         assert_eq!(
             format!("str {} {}", r#""a thing }"#, "another thing"),
-            iformat!(r##"str {r#""a thing }"#} {"another thing"}"##));
+            iformat!(r##"str {r#""a thing }"#} {"another thing"}"##)
+        );
     }
 
     #[test]
@@ -67,40 +69,56 @@ mod tests {
         iwriteln!(&mut buffer, "a boring string").unwrap();
         iwriteln!(&mut buffer, "some math 0x{2 + 9:x}").unwrap();
         iwrite!(&mut buffer, "the {1+0}st end").unwrap();
-        assert_eq!(&buffer[..], "\na boring string\nsome math 0xb\nthe 1st end".as_bytes());
+        assert_eq!(
+            &buffer[..],
+            "\na boring string\nsome math 0xb\nthe 1st end".as_bytes()
+        );
     }
 
     #[test]
     fn internal_lifetimes() {
         let test = "a test";
-        assert_eq!("dirty a test",
-            iformat!("dirty { let x: &'static str = test; { let y: &'static str = x; y } }"));
-        assert_eq!("dirty static str = test; { let y: &",
-            iformat!(r#"dirty { let x = "static str = test; { let y: &"; x }"#));
+        assert_eq!(
+            "dirty a test",
+            iformat!("dirty { { let x: &'static str = test; { let y: &'static str = x; y } } }")
+        );
+        assert_eq!(
+            "dirty static str = test; { let y: &",
+            iformat!(r#"dirty { { let x = "static str = test; { let y: &"; x }}"#)
+        );
     }
 
     #[test]
     fn internal_chars() {
-        assert_eq!("an open brace: {",
-            iformat!("an open brace: {'{'}"));
-        assert_eq!("a close brace: }",
-            iformat!("a close brace: {'}'}"));
-        assert_eq!("an open brace: {",
-            iformat!(r#"an open brace: {'\u{007b}'}"#));
-        assert_eq!("a close brace: }",
-            iformat!(r#"a close brace: {'\u{007D}'}"#));
-        assert_eq!("dirty dan: '",
-            iformat!(r#"dirty dan: {'\''; { '\'' }}"#));
-        assert_eq!("pinhead: \"",
-            iformat!(r#"pinhead: {'\"'; { '\"' }}"#));
-        assert_eq!("gary: '",
-            iformat!(r#"gary: {"\'"; { "\'" }}"#));
-        assert_eq!("val kilmer: \"",
-            iformat!(r#"val kilmer: {"\""; { "\"" }}"#));
-        assert_eq!("lelouch: \"",
-            iformat!(r#"lelouch: {'"'; { '"' }}"#));
-        assert_eq!("gon: '",
-            iformat!(r#"gon: {"'"; { "'" }}"#));
+        assert_eq!("an open brace: {", iformat!("an open brace: {'{'}"));
+        assert_eq!("a close brace: }", iformat!("a close brace: {'}'}"));
+        assert_eq!(
+            "an open brace: {",
+            iformat!(r#"an open brace: {'\u{007b}'}"#)
+        );
+        assert_eq!(
+            "a close brace: }",
+            iformat!(r#"a close brace: {'\u{007D}'}"#)
+        );
+        assert_eq!(
+            "dirty dan: '",
+            iformat!(r#"dirty dan: { { '\''; { '\'' }}}"#)
+        );
+        assert_eq!("pinhead: \"", iformat!(r#"pinhead: { {'\"'; { '\"' }}}"#));
+        assert_eq!("gary: '", iformat!(r#"gary: { {"\'"; { "\'" }}}"#));
+        assert_eq!(
+            "val kilmer: \"",
+            iformat!(r#"val kilmer: { {"\""; { "\"" }}}"#)
+        );
+        assert_eq!("lelouch: \"", iformat!(r#"lelouch: { {'"'; { '"' }}}"#));
+        assert_eq!("gon: '", iformat!(r#"gon: { {"'"; { "'" }}}"#));
+    }
+
+    #[test]
+    fn borrow() {
+        let s = String::from("asdf");
+        let v = vec![s];
+        iformat!("borrow: {v[0]}");
     }
 
     #[test]
