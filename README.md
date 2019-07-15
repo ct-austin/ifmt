@@ -3,7 +3,7 @@ A small crate which brings inline string interpolation to rust's standard format
 
 ## Getting started
 To use ifmt in your project, add
-```
+```toml
 [dependencies]
 ifmt = "0.2.0"
 ```
