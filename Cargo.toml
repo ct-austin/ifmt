@@ -10,7 +10,7 @@ license = "MIT/Apache-2.0"
 
 [dependencies]
 ifmt-impl = { version = "0.3", path = "impl" }
-proc-macro-hack = "0.5.10"
+proc-macro-hack = "0.5"
 
 [workspace]
 members = ["demo", "impl"]

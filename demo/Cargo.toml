@@ -7,4 +7,3 @@ publish = false
 
 [dependencies]
 ifmt = { version = "0.3.0", path = "../" }
-lazy_static = "1.4.0"
