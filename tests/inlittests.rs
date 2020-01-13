@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod inlittests {
     use ifmt::{iformat, ipanic, iwrite, iwriteln};
     #[test]
     fn simple_subst() {
