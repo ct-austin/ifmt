@@ -1,6 +1,6 @@
 [package]
 name = "ifmt"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["ct-austin <c@ctaustin.me>"]
 edition = "2018"
 readme = "README.md"
@@ -9,7 +9,7 @@ description = "Inline expression interpolation for Rust."
 license = "MIT/Apache-2.0"
 
 [dependencies]
-ifmt-impl = { version = "0.3.1", path = "impl" }
+ifmt-impl = { version = "0.3.2", path = "impl" }
 proc-macro-hack = "0.5"
 
 [workspace]
