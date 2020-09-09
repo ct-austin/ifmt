@@ -6,7 +6,8 @@ extern crate lazy_static;
 extern crate quote;
 use proc_macro_hack::proc_macro_hack;
 use regex::Regex;
-use syn::Token;
+use syn::{Token, Error};
+use syn::export::Span;
 
 fn consume_expr(s: &str) -> (&str, String) {
     lazy_static! {
@@ -88,7 +89,7 @@ macro_rules! def_ifmt_macro {
             use syn::parse_macro_input;
             let FormatContents{fmt, args} = parse_macro_input!(tokens as FormatContents);
             (quote! {
-                ::std::$to_wrap!(#fmt, #(#args),*);
+                ::std::$to_wrap!(#fmt, #(#args),*)
             }).into()
         }
     }
@@ -112,7 +113,7 @@ struct FormatSpec {
     spec: String,
 }
 
-fn parse_format_type(id: &str, input: syn::parse::ParseStream) -> syn::parse::Result<String> {
+fn parse_format_type(id: &str, span: Span, input: syn::parse::ParseStream) -> syn::parse::Result<String> {
     let mut out = String::new();
     if id == "x" || id == "X" {
         out.push_str(&id);
@@ -127,8 +128,7 @@ fn parse_format_type(id: &str, input: syn::parse::ParseStream) -> syn::parse::Re
     } else if id == "S" {
         out.push('E');
     } else {
-        // TODO this gives "unexpected end of expression" alongside the intended error
-        return Err(input.error(format!("{} is not a valid format type", id)));
+        return Err(Error::new(span, format!("{} is not a valid format type", id)));
     }
     Ok(out)
 }
@@ -137,6 +137,8 @@ fn parse_precision_type(input: syn::parse::ParseStream) -> syn::parse::Result<St
     // ['.' precision][type]
     // TODO make it so these can be identifiers/exprs as well? maybe in parens?
     let mut spec = String::new();
+
+    let span = input.cursor().span();
 
     // ['.']
     if input.peek(Token![.]) {
@@ -148,7 +150,7 @@ fn parse_precision_type(input: syn::parse::ParseStream) -> syn::parse::Result<St
         if lit.suffix() != "" {
             spec.push_str(&lit_str[..lit_str.len() - lit.suffix().len()]);
             // [type]
-            spec.push_str(&parse_format_type(&lit.suffix(), input)?);
+            spec.push_str(&parse_format_type(&lit.suffix(), span, input)?);
         } else {
             spec.push_str(&lit_str);
         }
@@ -161,7 +163,7 @@ fn parse_precision_type(input: syn::parse::ParseStream) -> syn::parse::Result<St
     // [type]
     } else if input.peek(syn::Ident) {
         let id = input.parse::<syn::Ident>()?.to_string();
-        spec.push_str(&parse_format_type(&id, input)?);
+        spec.push_str(&parse_format_type(&id, span, input)?);
     }
 
     Ok(spec)
@@ -233,30 +235,32 @@ impl syn::parse::Parse for FormatSpec {
         // ['0'][width]['.' precision][type]
         if input.peek(syn::LitFloat) {
             // ['0'][width]['.' precision][type]
+            let span = input.cursor().span();
             let lit = input.parse::<syn::LitFloat>()?;
             let lit_str = lit.to_string();
             if lit.suffix() != "" {
                 // ['0'][width]['.' precision]
                 spec.push_str(&lit_str[..lit_str.len()-lit.suffix().len()]);
                 // [type]
-                spec.push_str(&parse_format_type(&lit.suffix(), input)?);
+                spec.push_str(&parse_format_type(&lit.suffix(), span, input)?);
             } else {
                 // ['0'][width]['.' precision]
                 spec.push_str(&lit_str);
                 // [type]
                 if input.peek(syn::Ident) {
                     let id = input.parse::<syn::Ident>()?.to_string();
-                    spec.push_str(&parse_format_type(&id, input)?);
+                    spec.push_str(&parse_format_type(&id, span, input)?);
                 }
             }
         } else if input.peek(syn::LitInt) {
             // ['0'][width][type]
+            let span = input.cursor().span();
             let lit = input.parse::<syn::LitInt>()?;
             let lit_str = lit.to_string();
             if lit.suffix() != "" {
                 spec.push_str(&lit_str[..lit_str.len()-lit.suffix().len()]);
                 // [type]
-                spec.push_str(&parse_format_type(&lit.suffix(), input)?);
+                spec.push_str(&parse_format_type(&lit.suffix(), span, input)?);
             } else {
                 // ['.' precision][type]
                 spec.push_str(&lit_str);
@@ -342,9 +346,12 @@ impl FormatContents {
                 fmt += &ls.value().replace("{", "{{").replace("}", "}}");
                 expect_expr = true;
             } else if expect_expr {
-                // TODO: expression parsing spans don't work as expected for unexpected end errors
-                // e.g. iprintln!("test" 1 +); will have an error pointing at "test"
-                // however, iprintln!("test" 1 + (2 +)); works fine
+                // Bug in proc_macro_hack(fake_call_site): iformat!("x:" 2 + );'s
+                // "unexpected end of input" error span points at the first token in the macro
+                // invocation rather than the end.
+                // not going to try to work around - probably not a common mistake and
+                // if proc_macro_hack becomes a pass-through as mentioned by dtolnay
+                // (or, barring that, if I remove it as a dependency) the issue goes away
                 let expr = input.parse::<syn::Expr>()?;
                 args.push(expr);
                 fmt.push_str("{");
@@ -401,7 +408,7 @@ pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use syn::parse_macro_input;
     let WriteFormat{buf, fmt_contents: FormatContents{fmt, args}} = parse_macro_input!(tokens as WriteFormat);
     (quote! {
-        ::std::write!(#buf, #fmt, #(#args),*);
+        ::std::write!(#buf, #fmt, #(#args),*)
     }).into()
 }
 
@@ -410,6 +417,6 @@ pub fn iwriteln(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use syn::parse_macro_input;
     let WriteFormat{buf, fmt_contents: FormatContents{fmt, args}} = parse_macro_input!(tokens as WriteFormat);
     (quote! {
-        ::std::writeln!(#buf, #fmt, #(#args),*);
+        ::std::writeln!(#buf, #fmt, #(#args),*)
     }).into()
 }
