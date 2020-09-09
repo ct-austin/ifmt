@@ -153,6 +153,7 @@ mod outlittests {
         // println!("{:}>", "test"); fails because the `}` is parsed as a fill character
         let s = "test";
         assert_eq!("test>", iformat!(s ">"));
+        assert_eq!("test>", iformat!(s; ">"));
     }
 
     #[test]
