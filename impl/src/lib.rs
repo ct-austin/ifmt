@@ -347,9 +347,13 @@ impl FormatContents {
                 // however, iprintln!("test" 1 + (2 +)); works fine
                 let expr = input.parse::<syn::Expr>()?;
                 args.push(expr);
-                fmt.push_str("{:");
+                fmt.push_str("{");
                 if input.peek(Token![;]) {
-                    fmt.push_str(&input.parse::<FormatSpec>()?.spec);
+                    let spec = &input.parse::<FormatSpec>()?.spec;
+                    if !spec.is_empty() {
+                        fmt.push_str(":");
+                        fmt.push_str(spec);
+                    }
                 }
                 fmt.push('}');
                 expect_expr = false;

@@ -6,4 +6,4 @@ edition = "2018"
 publish = false
 
 [dependencies]
-ifmt = { version = "0.3.0", path = "../" }
+ifmt = { version = "0.3.1", path = "../" }

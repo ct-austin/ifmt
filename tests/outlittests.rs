@@ -149,6 +149,13 @@ mod outlittests {
     }
 
     #[test]
+    fn no_alignment_leak() {
+        // println!("{:}>", "test"); fails because the `}` is parsed as a fill character
+        let s = "test";
+        assert_eq!("test>", iformat!(s ">"));
+    }
+
+    #[test]
     #[should_panic(expected = "2B || !2b")]
     fn panic() {
         let tobe = 0x2B;
