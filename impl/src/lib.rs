@@ -4,10 +4,10 @@ extern crate regex;
 extern crate lazy_static;
 #[macro_use]
 extern crate quote;
+use proc_macro2::Span;
 use proc_macro_hack::proc_macro_hack;
 use regex::Regex;
 use syn::{Token, Error};
-use syn::export::Span;
 
 fn consume_expr(s: &str) -> (&str, String) {
     lazy_static! {
