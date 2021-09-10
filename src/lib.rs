@@ -109,6 +109,7 @@ fn consume_expr(s: &str) -> (&str, String) {
 macro_rules! def_ifmt_macro {
     ($(#[$meta:meta])* $name:ident, $to_wrap:ident) => {
         #[proc_macro]
+        $(#[$meta])*
         pub fn $name(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
             use syn::parse_macro_input;
             let FormatContents { fmt, args } = parse_macro_input!(tokens as FormatContents);
@@ -161,37 +162,37 @@ def_ifmt_macro!(
 );
 
 def_ifmt_macro!(
-    /// Print an [`iformat!`][iformat]-ed string to standard out.
+    /// Print an [`iformat!`][fn@iformat]-ed string to standard out.
     print,
     print
 );
 
 def_ifmt_macro!(
-    /// Print an [`iformat!`][iformat]-ed string to standard out, followed by `\n`.
+    /// Print an [`iformat!`][fn@iformat]-ed string to standard out, followed by `\n`.
     iprintln,
     println
 );
 
 def_ifmt_macro!(
-    /// Print an [`iformat!`][iformat]-ed string to standard error.
+    /// Print an [`iformat!`][fn@iformat]-ed string to standard error.
     ieprint,
     eprint
 );
 
 def_ifmt_macro!(
-    /// Print an [`iformat!`][iformat]-ed string to standard error, followed by `\n`.
+    /// Print an [`iformat!`][fn@iformat]-ed string to standard error, followed by `\n`.
     ieprintln,
     eprintln
 );
 
 def_ifmt_macro!(
-    /// Create a `fmt::Arguments` value a la `format_args!` with inlined expressions (using the same syntax as [`iformat!`][iformat]).
+    /// Create a `fmt::Arguments` value a la `format_args!` with inlined expressions (using the same syntax as [`iformat!`][fn@iformat]).
     iformat_args,
     format_args
 );
 
 def_ifmt_macro!(
-    /// Panic with an [`iformat!`][iformat]-ed message.
+    /// Panic with an [`iformat!`][fn@iformat]-ed message.
     ipanic,
     panic
 );
@@ -506,7 +507,7 @@ impl syn::parse::Parse for WriteFormat {
     }
 }
 
-/// Print an [`iformat!`][iformat]-ed string to the given buffer.
+/// Print an [`iformat!`][fn@iformat]-ed string to the given buffer.
 #[proc_macro]
 pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use syn::parse_macro_input;
@@ -520,7 +521,7 @@ pub fn iwrite(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     .into()
 }
 
-/// Print an [`iformat!`][iformat]-ed string to the given buffer, followed by `\n`.
+/// Print an [`iformat!`][fn@iformat]-ed string to the given buffer, followed by `\n`.
 #[proc_macro]
 pub fn iwriteln(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use syn::parse_macro_input;
