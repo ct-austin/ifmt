@@ -106,7 +106,7 @@ fn consume_expr(s: &str) -> (&str, String) {
         }
     }
 
-    panic!("unbalanced {");
+    panic!("{}", "unbalanced {");
 }
 
 macro_rules! def_ifmt_macro {
@@ -420,7 +420,7 @@ impl FormatContents {
                     if s.chars().next() == Some('}') {
                         format_lit.push_str("}}");
                     } else {
-                        panic!("unmatched }");
+                        panic!("{}", "unmatched }");
                     }
                 }
                 _ => format_lit.push(c),
