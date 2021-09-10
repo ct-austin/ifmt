@@ -69,15 +69,12 @@ fn consume_expr(s: &str) -> (&str, String) {
             }
             _ => {
                 let lit_match = LITERAL.find(s);
-                match lit_match {
-                    Some(m) => {
-                        s = &s[m.end()..];
-                        expr.push_str(m.as_str());
-                        // TODO this feels off
-                        // should we just nest the second match?
-                        continue;
-                    }
-                    None => (),
+                if let Some(m) = lit_match {
+                    s = &s[m.end()..];
+                    expr.push_str(m.as_str());
+                    // TODO this feels off
+                    // should we just nest the second match?
+                    continue;
                 }
                 let raw_caps = RAW_STRING_START.captures(s);
                 match raw_caps {
@@ -210,13 +207,13 @@ fn parse_format_type(
 ) -> syn::parse::Result<String> {
     let mut out = String::new();
     if id == "x" || id == "X" {
-        out.push_str(&id);
+        out.push_str(id);
         if input.peek(Token![?]) {
             input.parse::<Token![?]>()?;
             out.push('?');
         }
     } else if id == "o" || id == "p" || id == "b" || id == "e" || id == "E" {
-        out.push_str(&id);
+        out.push_str(id);
     } else if id == "s" {
         out.push('e');
     } else if id == "S" {
@@ -247,7 +244,7 @@ fn parse_precision_type(input: syn::parse::ParseStream) -> syn::parse::Result<St
         if lit.suffix() != "" {
             spec.push_str(&lit_str[..lit_str.len() - lit.suffix().len()]);
             // [type]
-            spec.push_str(&parse_format_type(&lit.suffix(), span, input)?);
+            spec.push_str(&parse_format_type(lit.suffix(), span, input)?);
         } else {
             spec.push_str(&lit_str);
         }
@@ -338,7 +335,7 @@ impl syn::parse::Parse for FormatSpec {
                 // ['0'][width]['.' precision]
                 spec.push_str(&lit_str[..lit_str.len() - lit.suffix().len()]);
                 // [type]
-                spec.push_str(&parse_format_type(&lit.suffix(), span, input)?);
+                spec.push_str(&parse_format_type(lit.suffix(), span, input)?);
             } else {
                 // ['0'][width]['.' precision]
                 spec.push_str(&lit_str);
@@ -356,7 +353,7 @@ impl syn::parse::Parse for FormatSpec {
             if lit.suffix() != "" {
                 spec.push_str(&lit_str[..lit_str.len() - lit.suffix().len()]);
                 // [type]
-                spec.push_str(&parse_format_type(&lit.suffix(), span, input)?);
+                spec.push_str(&parse_format_type(lit.suffix(), span, input)?);
             } else {
                 // ['.' precision][type]
                 spec.push_str(&lit_str);
@@ -366,7 +363,7 @@ impl syn::parse::Parse for FormatSpec {
             spec.push_str(&parse_precision_type(input)?);
         }
 
-        Ok(FormatSpec { spec: spec })
+        Ok(FormatSpec { spec })
     }
 }
 
@@ -417,7 +414,7 @@ impl FormatContents {
                 }
                 '}' => {
                     s = &s[1..];
-                    if s.chars().next() == Some('}') {
+                    if s.starts_with('}') {
                         format_lit.push_str("}}");
                     } else {
                         panic!("{}", "unmatched }");
@@ -454,11 +451,11 @@ impl FormatContents {
                 // (or, barring that, if I remove it as a dependency) the issue goes away
                 let expr = input.parse::<syn::Expr>()?;
                 args.push(expr);
-                fmt.push_str("{");
+                fmt.push('{');
                 if input.peek(Token![;]) {
                     let spec = &input.parse::<FormatSpec>()?.spec;
                     if !spec.is_empty() {
-                        fmt.push_str(":");
+                        fmt.push(':');
                         fmt.push_str(spec);
                     }
                 }
@@ -468,10 +465,7 @@ impl FormatContents {
                 return Err(lookahead.error());
             }
         }
-        Ok(FormatContents {
-            fmt: fmt,
-            args: args,
-        })
+        Ok(FormatContents { fmt, args })
     }
 }
 

@@ -2,6 +2,7 @@
 mod outlittests {
     use ifmt::{iformat, ipanic, iwrite, iwriteln};
     #[test]
+    #[allow(clippy::useless_format)]
     fn simple_subst() {
         let x = 5.3;
         assert_eq!(
@@ -103,15 +104,16 @@ mod outlittests {
         iwriteln!(&mut buffer).unwrap();
         iwriteln!(&mut buffer, "a boring string").unwrap();
         iwriteln!(&mut buffer, "some math 0x" 2 + 9;x).unwrap();
-        iwrite!(&mut buffer, "the " 1+0 "st end").unwrap();
+        iwrite!(&mut buffer, "the " 1+2 "rd end").unwrap();
         println!("{:?}", String::from_utf8(buffer[..].to_vec()).unwrap());
         assert_eq!(
             &buffer[..],
-            "\na boring string\nsome math 0xb\nthe 1st end".as_bytes()
+            "\na boring string\nsome math 0xb\nthe 3rd end".as_bytes()
         );
     }
 
     #[test]
+    #[allow(clippy::let_and_return)]
     fn internal_lifetimes() {
         let test = "a test";
         assert_eq!(
@@ -133,12 +135,12 @@ mod outlittests {
             "a close brace: }",
             iformat!(r#"a close brace: "# '\u{007D}')
         );
-        assert_eq!("dirty dan: '", iformat!("dirty dan: " { '\''; { '\'' }}));
-        assert_eq!("pinhead: \"", iformat!("pinhead: " {'\"'; { '\"' }}));
-        assert_eq!("gary: '", iformat!("gary: " {"\'"; { "\'" }}));
-        assert_eq!("val kilmer: \"", iformat!("val kilmer: " {"\""; { "\"" }}));
-        assert_eq!("lelouch: \"", iformat!("lelouch: " {'"'; { '"' }}));
-        assert_eq!("gon: '", iformat!("gon: " {"'"; { "'" }}));
+        assert_eq!("dirty dan: '", iformat!("dirty dan: " '\''));
+        assert_eq!("pinhead: \"", iformat!("pinhead: " '\"'));
+        assert_eq!("gary: '", iformat!("gary: " "\'"));
+        assert_eq!("val kilmer: \"", iformat!("val kilmer: " "\"" ));
+        assert_eq!("lelouch: \"", iformat!("lelouch: " '"' ));
+        assert_eq!("gon: '", iformat!("gon: " "'"));
     }
 
     #[test]

@@ -2,6 +2,7 @@
 mod inlittests {
     use ifmt::{iformat, ipanic, iwrite, iwriteln};
     #[test]
+    #[allow(clippy::useless_format)]
     fn simple_subst() {
         let x = 5.3;
         assert_eq!(
