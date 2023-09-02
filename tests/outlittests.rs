@@ -2,6 +2,7 @@
 mod outlittests {
     use ifmt::{iformat, ipanic, iwrite, iwriteln};
     #[test]
+    #[allow(clippy::useless_format)]
     fn simple_subst() {
         let x = 5.3;
         assert_eq!(
@@ -45,73 +46,74 @@ mod outlittests {
             iformat!("atest " (x*-k) as i32;o " " (x+k) as i32;X " " x*k;.4)
         );
 
-        assert_eq!(format!("{:+4}", 420),
-                   iformat!(420;+4));
-        assert_eq!(format!("{:-4}", 420),
-                   iformat!(420;-4));
-        assert_eq!(format!("{:>10.4}", "BBBBBBBBBBBBBBBBBBBB"),
-                   iformat!(("BBBBBBBBBBBBBBBBBBBB");>10 .4));
-        assert_eq!(format!("{:0>5}", "B"),
-                   iformat!(("B");'0'>5));
-        assert_eq!(format!("{:L>5}", "B"),
-                   iformat!(("B");'L'>5));
-        assert_eq!(format!("{:.3}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;.3));
-        assert_eq!(format!("{:11.3}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;11 .3));
-        assert_eq!(format!("{:11.3}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;11.3));
-        assert_eq!(format!("{:+11.3}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;+11 .3));
-        assert_eq!(format!("{:+11.3}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;+11.3));
-        assert_eq!(format!("{:+11.3e}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;+11 .3 e));
-        assert_eq!(format!("{:+11.3e}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;+11 .3s));
-        assert_eq!(format!("{:+11.3E}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;+11.3S));
-        assert_eq!(format!("{:+11.3e}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;+11.3 e));
-        assert_eq!(format!("{:+11.3E}", 3.1415e9f32),
-                   iformat!(3.1415e9f32;+11 .3 E));
-        assert_eq!(format!("{:<6}", 4.20),
-                   iformat!(4.20;<6));
-        assert_eq!(format!("{:06}", 4.20),
-                   iformat!(4.20;06));
-        assert_eq!(format!("{:^06}", 4.20),
-                   iformat!(4.20;^06));
-        assert_eq!(format!("{:+06}", 4.20),
-                   iformat!(4.20;+06));
-        assert_eq!(format!("{:<+06}", 4.20),
-                   iformat!(4.20;<+06));
-        assert_eq!(format!("{:#06x}", 420),
-                   iformat!(420;#06x));
-        assert_eq!(format!("{:>#06x}", 420),
-                   iformat!(420;>#06x));
-        assert_eq!(format!("{:^#06x}", 420),
-                   iformat!(420;^#06 x));
-        assert_eq!(format!("{:<#06x}", 420),
-                   iformat!(420;<#06 x));
+        assert_eq!(format!("{:+4}", 420), iformat!(420;+4));
+        assert_eq!(format!("{:-4}", 420), iformat!(420;-4));
+        assert_eq!(
+            format!("{:>10.4}", "BBBBBBBBBBBBBBBBBBBB"),
+            iformat!(("BBBBBBBBBBBBBBBBBBBB");>10 .4)
+        );
+        assert_eq!(format!("{:0>5}", "B"), iformat!(("B");'0'>5));
+        assert_eq!(format!("{:L>5}", "B"), iformat!(("B");'L'>5));
+        assert_eq!(format!("{:.3}", 3.1415e9f32), iformat!(3.1415e9f32;.3));
+        assert_eq!(format!("{:11.3}", 3.1415e9f32), iformat!(3.1415e9f32;11 .3));
+        assert_eq!(format!("{:11.3}", 3.1415e9f32), iformat!(3.1415e9f32;11.3));
+        assert_eq!(
+            format!("{:+11.3}", 3.1415e9f32),
+            iformat!(3.1415e9f32;+11 .3)
+        );
+        assert_eq!(
+            format!("{:+11.3}", 3.1415e9f32),
+            iformat!(3.1415e9f32;+11.3)
+        );
+        assert_eq!(
+            format!("{:+11.3e}", 3.1415e9f32),
+            iformat!(3.1415e9f32;+11 .3 e)
+        );
+        assert_eq!(
+            format!("{:+11.3e}", 3.1415e9f32),
+            iformat!(3.1415e9f32;+11 .3s)
+        );
+        assert_eq!(
+            format!("{:+11.3E}", 3.1415e9f32),
+            iformat!(3.1415e9f32;+11.3S)
+        );
+        assert_eq!(
+            format!("{:+11.3e}", 3.1415e9f32),
+            iformat!(3.1415e9f32;+11.3 e)
+        );
+        assert_eq!(
+            format!("{:+11.3E}", 3.1415e9f32),
+            iformat!(3.1415e9f32;+11 .3 E)
+        );
+        assert_eq!(format!("{:<6}", 4.20), iformat!(4.20;<6));
+        assert_eq!(format!("{:06}", 4.20), iformat!(4.20;06));
+        assert_eq!(format!("{:^06}", 4.20), iformat!(4.20;^06));
+        assert_eq!(format!("{:+06}", 4.20), iformat!(4.20;+06));
+        assert_eq!(format!("{:<+06}", 4.20), iformat!(4.20;<+06));
+        assert_eq!(format!("{:#06x}", 420), iformat!(420;#06x));
+        assert_eq!(format!("{:>#06x}", 420), iformat!(420;>#06x));
+        assert_eq!(format!("{:^#06x}", 420), iformat!(420;^#06 x));
+        assert_eq!(format!("{:<#06x}", 420), iformat!(420;<#06 x));
     }
 
-     #[test]
-     fn write() {
-         use std::io::Write;
-         let mut buffer = Vec::new();
-         // empty
-         iwriteln!(&mut buffer).unwrap();
-         iwriteln!(&mut buffer, "a boring string").unwrap();
-         iwriteln!(&mut buffer, "some math 0x" 2 + 9;x).unwrap();
-         iwrite!(&mut buffer, "the " 1+0 "st end").unwrap();
-         println!("{:?}", String::from_utf8(buffer[..].to_vec()).unwrap());
-         assert_eq!(
-             &buffer[..],
-             "\na boring string\nsome math 0xb\nthe 1st end".as_bytes()
-         );
-     }
+    #[test]
+    fn write() {
+        use std::io::Write;
+        let mut buffer = Vec::new();
+        // empty
+        iwriteln!(&mut buffer).unwrap();
+        iwriteln!(&mut buffer, "a boring string").unwrap();
+        iwriteln!(&mut buffer, "some math 0x" 2 + 9;x).unwrap();
+        iwrite!(&mut buffer, "the " 1+2 "rd end").unwrap();
+        println!("{:?}", String::from_utf8(buffer[..].to_vec()).unwrap());
+        assert_eq!(
+            &buffer[..],
+            "\na boring string\nsome math 0xb\nthe 3rd end".as_bytes()
+        );
+    }
 
     #[test]
+    #[allow(clippy::let_and_return)]
     fn internal_lifetimes() {
         let test = "a test";
         assert_eq!(
@@ -133,12 +135,12 @@ mod outlittests {
             "a close brace: }",
             iformat!(r#"a close brace: "# '\u{007D}')
         );
-        assert_eq!("dirty dan: '", iformat!("dirty dan: " { '\''; { '\'' }}));
-        assert_eq!("pinhead: \"", iformat!("pinhead: " {'\"'; { '\"' }}));
-        assert_eq!("gary: '", iformat!("gary: " {"\'"; { "\'" }}));
-        assert_eq!("val kilmer: \"", iformat!("val kilmer: " {"\""; { "\"" }}));
-        assert_eq!("lelouch: \"", iformat!("lelouch: " {'"'; { '"' }}));
-        assert_eq!("gon: '", iformat!("gon: " {"'"; { "'" }}));
+        assert_eq!("dirty dan: '", iformat!("dirty dan: " '\''));
+        assert_eq!("pinhead: \"", iformat!("pinhead: " '\"'));
+        assert_eq!("gary: '", iformat!("gary: " "\'"));
+        assert_eq!("val kilmer: \"", iformat!("val kilmer: " "\"" ));
+        assert_eq!("lelouch: \"", iformat!("lelouch: " '"' ));
+        assert_eq!("gon: '", iformat!("gon: " "'"));
     }
 
     #[test]
